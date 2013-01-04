@@ -5,7 +5,7 @@
 
 (define expt-machine
   (make-machine
-    '(n b val continue)
+    '(n b val)
     (list (list '* *) (list '- -) (list '= =))
     '(controller
       (assign continue (label expt-done))  ;;set up final return addr

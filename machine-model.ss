@@ -61,6 +61,10 @@
           (if val
               (cadr val)
               (error "Unknown register:" name))))
+              ;allocate by first seen
+	      ;(begin
+	      ;(allocate-register name)
+	      ;(lookup-register name)))))
       (define (execute)
         (let ((insts (get-contents pc)))
           (if (null? insts)
