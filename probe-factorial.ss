@@ -28,14 +28,17 @@
    base-case
      (assign val (const 1))                ; base case: 1! = 1
      (goto (reg continue))                 ; return to caller
-     fact-done)))
+   fact-done)))
 
 
 (define (stat n)
+  ((fact-machine 'trace-on))
   (set-register-contents! fact-machine 'n n)
   (start fact-machine)
   (display (get-register-contents fact-machine 'val))
   ((fact-machine 'stack) 'print-statistics)
+  (display "\t\t")
+  (display (fact-machine 'get-inst-count))
   (newline))
 
 (define (make-list n)

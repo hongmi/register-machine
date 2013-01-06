@@ -28,10 +28,12 @@
 	(error "Undefined label - ASSEMBLE" label-name))))
 
 ;;instruction
-(define (make-instruction text)
-  (cons text '()))
+(define (make-instruction text label)
+  (cons (cons label text) '()))
 (define (instruction-text inst)
-  (car inst))
+  (cdar inst))
+(define (instruction-label inst)
+  (caar inst))
 (define (instruction-execution-proc inst)
   (cdr inst))
 (define (set-instruction-execution-proc! inst proc)
@@ -43,7 +45,10 @@
   (let ((pc (make-register 'pc))
         (flag (make-register 'flag))
         (stack (make-stack))
-        (the-instruction-sequence '()))
+        (the-instruction-sequence '())
+	(inst-count 0)
+	(trace-switch #f)
+	(current-label '()))
     (let ((the-ops
             (list (list 'initialize-stack
 			(lambda () (stack 'initialize)))
@@ -67,16 +72,39 @@
 	      ;(begin
 	      ;(allocate-register name)
 	      ;(lookup-register name)))))
+      (define (get-inst-count)
+	inst-count)
+      (define (reset-inst-count)
+	(set! inst-count 0))
+      (define (trace-on) (set! trace-switch #t))
+      (define (trace-off) (set! trace-switch #f))
+      (define (trace instruction)
+	(if trace-switch
+	    (begin 
+	      (if (symbol? (instruction-label instruction))
+		  (begin
+		    (set! current-label (instruction-label instruction))
+		    (display current-label)
+		    (newline)))
+	      (begin 
+		(display inst-count)
+		(display ": ")
+		(display (instruction-text instruction))
+		(newline)))))
+		  
       (define (execute)
         (let ((insts (get-contents pc)))
           (if (null? insts)
               'done
               (begin
-                ((instruction-execution-proc (car insts)))
+		(set! inst-count (+ inst-count 1))
+		(trace (car insts))
+		((instruction-execution-proc (car insts)))
                 (execute)))))
       (define (dispatch message)
         (cond ((eq? message 'start)
                (set-contents! pc the-instruction-sequence)
+	       (reset-inst-count)
                (execute))
               ((eq? message 'install-instruction-sequence)
 	       (lambda (seq) (set! the-instruction-sequence seq)))
@@ -86,6 +114,10 @@
 	       (lambda (ops) (set! the-ops (append the-ops ops))))
               ((eq? message 'stack) stack)
               ((eq? message 'operations) the-ops)
+	      ((eq? message 'get-inst-count) inst-count)
+	      ((eq? message 'reset-inst-count) reset-inst-count)
+	      ((eq? message 'trace-on) trace-on)
+	      ((eq? message 'trace-off) trace-off)
               (else (error "Unknown request - MACHINE" message))))
       dispatch)))
 
