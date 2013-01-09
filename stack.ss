@@ -25,7 +25,6 @@
       (set! current-depth 0)
       'done)
     (define (print-statistics)
-      (newline)
       (display (list 'total-pushes '= number-pushes
 		     'maximum-depth '= max-depth)))
     (define (dispatch message)

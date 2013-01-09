@@ -4,15 +4,37 @@
 (load "stack.ss")
 
 ;;make-register
-(define (make-register name)
-  (let ((contents '*unassigned*))
+(define (make-register reg-name)
+  (let ((contents '*unassigned*)
+	(name reg-name)
+	(traced #f))
+    (define (trace-on)
+      (set! traced #t))
+    (define (trace-off)
+      (set! traced #f))
     (define (dispatch message)
-      (cond ((eq? message 'get) contents)
+      (cond ((eq? message 'name) name)
+	    ((eq? message 'trace-on) trace-on)
+	    ((eq? message 'trace-off) trace-off)
+	    ((eq? message 'get) contents)
 	    ((eq? message 'set)
-	     (lambda (value) (set! contents value)))
+	     (lambda (value)
+	       (begin
+		 (if traced
+		     (begin
+		       (display ";")
+		       (display name)
+		       (display ": ")
+		       (display contents)
+		       (display " -> ")
+		       (display value)
+		       (newline)))
+		 (set! contents value))))
 	    (else
 	     (error "Unknown request - REGISTER" message))))
     dispatch))
+(define (get-register-name register)
+  (register 'name))
 (define (get-contents register)
   (register 'get))
 (define (set-contents! register value)
@@ -39,6 +61,11 @@
 (define (set-instruction-execution-proc! inst proc)
   (set-cdr! inst proc))
 
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+	((eq? x (car set)) #t)
+	(else
+	 (element-of-set? x (cdr set)))))
 
 ;;make-new-machine
 (define (make-new-machine)
@@ -131,3 +158,8 @@
 (define (set-register-contents! machine register-name value)
   (set-contents! (get-register machine register-name) value)
   'done)
+
+(define (trace-register-on machine register-name)
+  (((get-register machine register-name) 'trace-on)))
+(define (trace-register-off machine register-name)
+  (((get-register machine register-name) 'trace-off)))

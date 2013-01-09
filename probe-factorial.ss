@@ -35,9 +35,13 @@
   ((fact-machine 'trace-on))
   (set-register-contents! fact-machine 'n n)
   (start fact-machine)
+  (display "contents of val: ")
   (display (get-register-contents fact-machine 'val))
+  (newline)
+  (display ";statistic: ")
   ((fact-machine 'stack) 'print-statistics)
-  (display "\t\t")
+  (newline)
+  (display ";instruction-count: ")
   (display (fact-machine 'get-inst-count))
   (newline))
 
@@ -48,5 +52,8 @@
 (define (stat-total n)
   (map stat (make-list n)))
 
+
+(trace-register-on fact-machine 'n)
+(trace-register-on fact-machine 'val)
 (display "input a number: ")
 (stat-total (read))
